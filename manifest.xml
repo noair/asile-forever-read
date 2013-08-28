@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<extension engine="1.0">
+  <id>asile_forever_read</id>
+  <title>Asile Forever Read</title>
+  <version>0.1</version>
+  <description>This extension alow user to permanently ignore topics.</description>
+  <author>Noway</author>
+  <minversion>1.4</minversion>
+  <maxtestedon>1.4</maxtestedon>
+  <dependencies>
+  </dependencies>
+  <note type="install">Tu vas décéder.</note>
+  <install><![CDATA[
+    // Installation code
+    if (!$forum_db->table_exists('asile_forever_read'))
+    {
+      $schema = array(
+        'FIELDS'    => array(
+            'topic_id'    => array(
+            'datatype'    => 'INT(10) UNSIGNED',
+            'allow_null'    => false,
+          ),
+            'poster_id'    => array(
+            'datatype'    => 'INT(10) UNSIGNED',
+            'allow_null'    => false
+          )
+        )
+      );
+      $forum_db->create_table('asile_forever_read', $schema);
+    }
+  ]]></install>
+  <uninstall><![CDATA[
+    // Uninstallation code
+    $forum_db->drop_table('asile_forever_read');
+  ]]></uninstall>
+  <hooks>
+
+    <hook id="sf_fn_generate_action_search_query_qr_get_recent"><![CDATA[
+        $query['WHERE'] .= ' AND t.id NOT IN (SELECT topic_id FROM asile_forever_read WHERE poster_id='.$forum_user['id'].')';
+    ]]></hook>
+
+    <hook id="sf_fn_generate_action_search_query_qr_get_new"><![CDATA[
+        $query['WHERE'] .= ' AND t.id NOT IN (SELECT topic_id FROM asile_forever_read WHERE poster_id='.$forum_user['id'].')';
+    ]]></hook>
+
+    <hook id="mi_new_action"><![CDATA[
+                 //Load functions
+        if(!defined('ASILE_FR_FUNCTIONS_LOADED'))
+            require $ext_info['path'].'/functions.php';
+
+        //Load lang files
+        if (!isset($lang_asile_fr)){
+            if (file_exists($ext_info['path'].'/lang/'.$forum_user['language'].'/'.$ext_info['id'].'.php'))
+                include $ext_info['path'].'/lang/'.$forum_user['language'].'/'.$ext_info['id'].'.php';
+            else
+                include $ext_info['path'].'/lang/English/'.$ext_info['id'].'.php';
+        }
+        
+        //Disable a topic
+        if ($action == 'asile_fr_disable_topic' && !$forum_user['is_guest']){
+            if (isset($_GET['topic_id'])){
+                $asile_fr_topic = $_GET['topic_id'];
+            } else {
+                $asile_fr_topic = -1  ;
+            }
+
+            ($hook = get_hook('asile_fr_after_disable_action_set')) ? eval($hook) : null;
+
+            if ($asile_fr_topic != -1)
+                asile_fr_ignore_topic($asile_fr_topic);
+            redirect(forum_link($forum_url['asile_fr_main_user']), $lang_asile_fr['Topic ignored']);
+        }
+
+        //Enable a topic previously disabled
+        if ($action == 'asile_fr_enable_topic' && !$forum_user['is_guest']){
+            if (isset($_GET['topic_id'])){
+                $asile_fr_topic = $_GET['topic_id'];
+            } else {
+                $asile_fr_topic = -1  ;
+            }
+
+            ($hook = get_hook('asile_fr_after_enable_action_set')) ? eval($hook) : null;
+
+            if ($asile_fr_topic != -1)
+                asile_fr_enable_topic($asile_fr_topic);
+
+            redirect(forum_link($forum_url['asile_fr_main_user']), $lang_asile_fr['Topic not ignored']);
+        }
+
+        //profile section
+        $section = isset($_GET['section']) ? $_GET['section'] : null;
+        if ($section == 'asile_fr' && !$forum_user['is_guest']){
+            ($hook = get_hook('asile_fr_pre_page_building')) ? eval($hook) : null;
+
+$forum_page['crumbs'] = array(
+        array($forum_config['o_board_title'], forum_link($forum_url['index'])),
+        array($lang_asile_fr['TI'], forum_link($forum_url['asile_fr_main_user']))
+    );
+            $asile_fr_page_text = asile_fr_get_page($pun_pm_page);
+
+            define('FORUM_PAGE', 'asile_fr-'.$asile_fr_page);
+            require FORUM_ROOT.'header.php';
+
+            // START SUBST - <!-- forum_main -->
+            ob_start();
+
+            echo $asile_fr_page_text;
+
+            $tpl_temp = trim(ob_get_contents());
+            $tpl_main = str_replace('<!-- forum_main -->', $tpl_temp, $tpl_main);
+            ob_end_clean();
+            // END SUBST - <!-- forum_main -->
+
+            require FORUM_ROOT.'footer.php';
+        }
+    ]]></hook>
+
+      <hook id="vt_pre_header_load"><![CDATA[
+         //Load functions
+        if(!defined('ASILE_FR_FUNCTIONS_LOADED'))
+            require $ext_info['path'].'/functions.php';
+
+        //Load lang files
+        if (!isset($lang_asile_fr)){
+            if (file_exists($ext_info['path'].'/lang/'.$forum_user['language'].'/'.$ext_info['id'].'.php'))
+                include $ext_info['path'].'/lang/'.$forum_user['language'].'/'.$ext_info['id'].'.php';
+            else
+                include $ext_info['path'].'/lang/English/'.$ext_info['id'].'.php';
+        }
+
+        if (asile_fr_is_ignored($id) == 0)
+            $forum_page['main_head_options']['foreverread'] = '<span><a class="sub-option" href="'.forum_link($forum_url['asile_fr_disable_topic'],$id).'" title="'.$lang_asile_fr['Lire pour toujours'].'">'.$lang_asile_fr['Lire pour toujours'].'</a></span>';
+        else
+            $forum_page['main_head_options']['foreverread'] = '<span>'.$lang_asile_fr['Already ignored'].'</span>';
+      ]]>
+    </hook>
+
+    <hook id="co_modify_url_scheme"><![CDATA[
+        if (file_exists($ext_info['path'].'/url/'.$forum_config['o_sef'].'.php'))
+            require $ext_info['path'].'/url/'.$forum_config['o_sef'].'.php';
+        else
+            require $ext_info['path'].'/url/Default.php';
+    ]]></hook>
+
+
+    <hook id="fn_generate_navlinks_end"><![CDATA[
+         //Load functions
+        if(!defined('ASILE_FR_FUNCTIONS_LOADED'))
+            require $ext_info['path'].'/functions.php';
+
+        //Load lang files
+        if (!isset($lang_asile_fr)){
+            if (file_exists($ext_info['path'].'/lang/'.$forum_user['language'].'/'.$ext_info['id'].'.php'))
+                include $ext_info['path'].'/lang/'.$forum_user['language'].'/'.$ext_info['id'].'.php';
+            else
+                include $ext_info['path'].'/lang/English/'.$ext_info['id'].'.php';
+        }
+        if (!$forum_user['is_guest'])
+            $links['profile'] .= "\n\t\t".'<li id="nav_asile_fr"><a href="'.forum_link($forum_url['asile_fr_main_user']).'"><span>'.$lang_asile_fr['TI'].'</span></a></li>';
+        ]]></hook>
+   </hooks>
+</extension>
