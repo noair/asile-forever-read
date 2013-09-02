@@ -3,14 +3,15 @@
 <extension engine="1.0">
   <id>asile_forever_read</id>
   <title>Asile Forever Read</title>
-  <version>0.1</version>
-  <description>This extension alow user to permanently ignore topics.</description>
+  <version>0.2</version>
+  <description>Cette extension instale un kit racine mexicain et permet d'ignorer certains posts ... enfin je crois.</description>
   <author>Noway</author>
   <minversion>1.4</minversion>
-  <maxtestedon>1.4</maxtestedon>
+  <maxtestedon>1.4.3</maxtestedon>
   <dependencies>
   </dependencies>
-  <note type="install">Tu vas décéder.</note>
+  <note type="install">Ta femme va m'aimer.</note>
+  <note type="install"></note>
   <install><![CDATA[
     // Installation code
     if (!$forum_db->table_exists('asile_forever_read'))
@@ -37,11 +38,11 @@
   <hooks>
 
     <hook id="sf_fn_generate_action_search_query_qr_get_recent"><![CDATA[
-        $query['WHERE'] .= ' AND t.id NOT IN (SELECT topic_id FROM asile_forever_read WHERE poster_id='.$forum_user['id'].')';
+        $query['WHERE'] .= ' AND t.id NOT IN (SELECT topic_id FROM '.$forum_db->prefix.'asile_forever_read WHERE poster_id='.$forum_user['id'].')';
     ]]></hook>
 
     <hook id="sf_fn_generate_action_search_query_qr_get_new"><![CDATA[
-        $query['WHERE'] .= ' AND t.id NOT IN (SELECT topic_id FROM asile_forever_read WHERE poster_id='.$forum_user['id'].')';
+        $query['WHERE'] .= ' AND t.id NOT IN (SELECT topic_id FROM '.$forum_db->prefix.'asile_forever_read WHERE poster_id='.$forum_user['id'].')';
     ]]></hook>
 
     <hook id="mi_new_action"><![CDATA[
