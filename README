@@ -1,2 +1,19 @@
+== asile_forever_read ==
+
+== Intro ==
 Pour Alioch' 
 with love
+
+== licence ==
+Ce code de qualité appartient à l'humanité.
+
+== Comment ca marche ==
+On crée une table asile_forever_read qui stocke des couples user_id/topic_id des topics que le user souhaite ignorer
+
+== TODO ==
+Utiliser un csrf
+Corriger les bugs
+
+== Changelog ==
+v0.2 : version qui marche
+v0.1 : version qui marche pas 
