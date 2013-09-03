@@ -3,15 +3,14 @@
 <extension engine="1.0">
   <id>asile_forever_read</id>
   <title>Asile Forever Read</title>
-  <version>0.2</version>
-  <description>Cette extension instale un kit racine mexicain et permet d'ignorer certains posts ... enfin je crois.</description>
+  <version>0.3</version>
+  <description>Cette extension installe un kit racine mexicain et permet d'ignorer certains posts ... enfin je crois.</description>
   <author>Noway</author>
   <minversion>1.4</minversion>
   <maxtestedon>1.4.3</maxtestedon>
   <dependencies>
   </dependencies>
   <note type="install">Ta femme va m'aimer.</note>
-  <note type="install"></note>
   <install><![CDATA[
     // Installation code
     if (!$forum_db->table_exists('asile_forever_read'))
@@ -42,6 +41,10 @@
     ]]></hook>
 
     <hook id="sf_fn_generate_action_search_query_qr_get_new"><![CDATA[
+        $query['WHERE'] .= ' AND t.id NOT IN (SELECT topic_id FROM '.$forum_db->prefix.'asile_forever_read WHERE poster_id='.$forum_user['id'].')';
+    ]]></hook>
+
+    <hook id="in_qr_get_new_topics"><![CDATA[
         $query['WHERE'] .= ' AND t.id NOT IN (SELECT topic_id FROM '.$forum_db->prefix.'asile_forever_read WHERE poster_id='.$forum_user['id'].')';
     ]]></hook>
 
